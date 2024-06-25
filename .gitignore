@@ -25,7 +25,6 @@ venv/
 
 # dotenv
 .env
-.env*
 
 # Mac
 .DS_Store
