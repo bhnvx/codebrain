@@ -5,8 +5,8 @@ from fastapi.responses import ORJSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dtos.coordinates_request import CoordinatesRequest
-from app.dtos.geometry_response import GeoMetryResponse
-from app.entities.public.controller import CONTROLLER_TL_SPBD_BULD_28000
+from app.dtos.coordinates_response import GeoJsonResponse
+from app.services.coordinates_service import get_geojson_data_by_coordinates
 
 from app.utils.db_ import get_db_session
 
@@ -23,8 +23,8 @@ router = APIRouter(
 async def api_get_coordinates(
     coordinates: Annotated[CoordinatesRequest, Depends()],
     db: AsyncSession = Depends(get_db_session),
-) -> None:
-    await CONTROLLER_TL_SPBD_BULD_28000(db).get_multipolygon_by_coordinates_requests(
-        coordinates
-    )
-    return
+) -> GeoJsonResponse:
+    result = await get_geojson_data_by_coordinates(db=db, coordinates=coordinates)
+    if result:
+        return GeoJsonResponse(features=result)
+    return GeoJsonResponse(features=())

@@ -1,8 +1,9 @@
+import json
+from typing import List
+
 from sqlalchemy import select
 from sqlalchemy.sql.expression import func
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from shapely import wkt
 
 from app.entities.public.tables import TABLE_TL_SPBD_BULD_28000
 from app.dtos.coordinates_request import CoordinatesRequest
@@ -12,9 +13,9 @@ class CONTROLLER_TL_SPBD_BULD_28000:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def get_multipolygon_by_coordinates_requests(
+    async def find_area_within_radius_by_coordinates(
         self, coordinates: CoordinatesRequest, radius=500
-    ):
+    ) -> List:
         query = select(
             TABLE_TL_SPBD_BULD_28000.id,
             TABLE_TL_SPBD_BULD_28000.buld_nm,
@@ -40,5 +41,19 @@ class CONTROLLER_TL_SPBD_BULD_28000:
 
         result = await self.db.execute(query)
         datas = result.fetchall()
-
-        print(datas[0].coordinates)
+        return tuple(
+            {
+                "properties": {
+                    "id": i[0],
+                    "buld_nm": i[1],
+                    "buld_nm_dc": i[2],
+                    "pos_bul_nm": i[3],
+                    "gro_flo_co": i[4],
+                },
+                "geometry": {
+                    "type": json.loads(i[5])["type"],
+                    "coordinates": json.loads(i[5])["coordinates"],
+                },
+            }
+            for i in datas
+        )
